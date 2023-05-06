@@ -42,6 +42,7 @@ namespace BublikHeadBot;
         
         public bool BoyanConfirmationPending { get; set; }
         public long MessageIdForConfirmation { get; set; }
+        public long BoyanMessageId { get; set; }
         
         public BotUser User { get; set; }
         public ICollection<Agreement> Agreements { get; set; }

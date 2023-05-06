@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Telegram.Bot;
 using Telegram.Bots.Types;
+using Message = Telegram.Bot.Types.Message;
 
 namespace BublikHeadBot;
 
@@ -210,24 +211,26 @@ public class DbOperations
         }
     }
 
-    public async Task AddAgreementOnBoyan(BotUser userWhoAgreed)
+    public async Task CreateBoyanCheck(Message boyanMarkMessage, long botMessageId)
     {
-        using (BotDbContext dbContext = new())
+        BotUser userInDb = await FetchUser(boyanMarkMessage.ReplyToMessage.From.Id);
+        if (userInDb != null)
         {
-            Agreement? agreement = await dbContext.Agreements
-                .Include(a => a.AgreedByUser)
-                .FirstOrDefaultAsync(a => a.AgreedByUserId == userWhoAgreed.Id);
-
-            if (agreement == null)
+            using (BotDbContext dbContext = new())
             {
-                dbContext.Agreements.Add(new Agreement
+                dbContext.Boyans.Add(new Boyan
                 {
-                    AgreedByUser = userWhoAgreed,
-                    AgreedByUserId = userWhoAgreed.Id,
+                    BoyanConfirmationPending = true,
+                    User = userInDb,
+                    UserId = userInDb.Id,
+                    MessageIdForConfirmation = botMessageId,
+                    BoyanMessageId = boyanMarkMessage.ReplyToMessage.MessageId
                 });
-                
+
+                await dbContext.SaveChangesAsync();
             }
         }
+        
     }
 
     public async Task<List<BotUser>> FetchAllUsers()

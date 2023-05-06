@@ -1,5 +1,4 @@
 ﻿using BublikHeadBot;
-using Microsoft.EntityFrameworkCore;
 
 class Program
 {

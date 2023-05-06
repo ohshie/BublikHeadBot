@@ -8,7 +8,7 @@ namespace BublikHeadBot;
 public class BotActions
 {
     private ITelegramBotClient BotClient { get; }
-    private Message Message { get; }
+    private Message Message { get; set; }
     private DbOperations DbOperations { get; }
 
     private string MessagesBeforeAlarm = Environment.GetEnvironmentVariable("MessagesBeforeAlarm");
@@ -177,6 +177,20 @@ public class BotActions
                        $"{messageWithRating}");
     }
 
+    public async Task MessageMarkedAsBoyan()
+    {
+        string pattern = @"(боян|баян)";
+
+        Regex regex = new Regex(pattern, RegexOptions.IgnoreCase);
+
+        if (regex.IsMatch(Message.Text) && Message.ReplyToMessage.MessageId != null)
+        {
+            var botMessage =
+                await SendBotMessage($"{Message.From.Username} think that this is a boyan. Anyone agrees?");
+            
+            await DbOperations.CreateBoyanCheck(Message, botMessage.MessageId);
+        }
+    }
     
     // operations when + received from chat.
     public async Task AgreementFromGroup()
@@ -194,16 +208,6 @@ public class BotActions
             ConfirmationProcessor confirmationProcessor = new(BotClient, Message);
             
             await confirmationProcessor.ProcessAgreementOnHabit(habit);
-        }
-        
-        string pattern = @"(боян|баян)";
-
-        Regex regex = new Regex(pattern, RegexOptions.IgnoreCase);
-
-        if (regex.IsMatch(Message.Text) && Message.ReplyToMessage.MessageId != null)
-        {
-            ConfirmationProcessor confirmationProcessor = new(BotClient, Message);
-            await confirmationProcessor.ProcessAgreementOnBoyan();
         }
     }
     
