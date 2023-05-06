@@ -1,4 +1,5 @@
 ﻿using BublikHeadBot;
+using Microsoft.EntityFrameworkCore;
 
 class Program
 {
@@ -6,7 +7,7 @@ class Program
     {
         using BotDbContext dbContext = new BotDbContext();
         {
-            await dbContext.Database.EnsureCreatedAsync();
+            await dbContext.Database.MigrateAsync();
         }
         
         BotClient botClient = new BotClient();
