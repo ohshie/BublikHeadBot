@@ -211,26 +211,60 @@ public class DbOperations
         }
     }
 
+    public async Task<Boyan> AddAgreementToBoyan(Boyan boyan, long agreeinUser)
+    {
+        using (BotDbContext dbContext = new())
+        {
+            Agreement agreement = new Agreement()
+            {
+                BoyanId = boyan.Id,
+                AgreedByUserId = agreeinUser
+            };
+
+            if (boyan.Agreements == null)
+            {
+                boyan.Agreements = new List<Agreement>();
+            }
+
+            dbContext.Agreements.Add(agreement);
+            dbContext.Update(boyan);
+            await dbContext.SaveChangesAsync();
+
+            return boyan;
+        }
+    }
+
     public async Task CreateBoyanCheck(Message boyanMarkMessage, long botMessageId)
     {
-        BotUser userInDb = await FetchUser(boyanMarkMessage.ReplyToMessage.From.Id);
-        if (userInDb != null)
-        {
-            using (BotDbContext dbContext = new())
+        using (BotDbContext dbContext = new())
+        { 
+            dbContext.Boyans.Add(new Boyan
             {
-                dbContext.Boyans.Add(new Boyan
-                {
-                    BoyanConfirmationPending = true,
-                    User = userInDb,
-                    UserId = userInDb.Id,
-                    MessageIdForConfirmation = botMessageId,
-                    BoyanMessageId = boyanMarkMessage.ReplyToMessage.MessageId
-                });
+                BoyanConfirmationPending = true,
+                UserId = boyanMarkMessage.ReplyToMessage.From.Id,
+                UserName = boyanMarkMessage.ReplyToMessage.From.Username,
+                boyanRequester = boyanMarkMessage.From.Id,
+                MessageIdForConfirmation = botMessageId,
+                BoyanMessageId = boyanMarkMessage.ReplyToMessage.MessageId
+            });
 
-                await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
+        }
+    }
+
+    public async Task<Boyan> FetchCorrespondingBoyan(int? messageId)
+    {
+        using (BotDbContext dbContext = new())
+        {
+            Boyan? boyan = await dbContext.Boyans.Include(b => b.Agreements).FirstOrDefaultAsync(b => b.MessageIdForConfirmation == messageId);
+
+            if (boyan != null)
+            {
+                return boyan;
             }
         }
-        
+
+        return null;
     }
 
     public async Task<List<BotUser>> FetchAllUsers()

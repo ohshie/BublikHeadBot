@@ -31,12 +31,25 @@ public class ConfirmationProcessor : BotActions
         if (habit.ApprovalPending) await ProcessApprovals();
     }
 
-    internal async Task ProcessAgreementOnBoyan()
+    internal async Task ProcessAgreementOnBoyan(Boyan boyan)
     {
-        
+        switch (boyan.Agreements.Count)
+        {
+            case 0:
+                await DbOperations.AddAgreementToBoyan(boyan, Message.From.Id);
+                await BotClient.SendTextMessageAsync(chatId:Message.Chat.Id,text:$"{Message.From.Username} підтвердив, що це боян\n" +
+                                     $"Треба ще 1 і пакуємо його нахуй",
+                                     replyToMessageId:boyan.BoyanMessageId);
+                return;
+            case 1:
+                await DbOperations.AddAgreementToBoyan(boyan, Message.From.Id);
+                await BotClient.SendTextMessageAsync(chatId:Message.Chat.Id,text:$"просто можна не бути малоросом" +
+                    $"Треба ще 1 і пакуємо його нахуй",
+                    replyToMessageId:boyan.BoyanMessageId);
+                break;
+        }
     }
-
-
+    
     private async Task ProcessConfirmations()
     {
         switch (HabitInQuestion.Agreements.Count)

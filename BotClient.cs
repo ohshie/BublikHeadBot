@@ -81,7 +81,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
         
         if (message.Text.StartsWith("/rating")) await botActions.PrintUsersRatings();
 
-        if (message.Text.StartsWith("@bublikheadbot")) await botActions.AgreementFromGroup();
+        if (message.Text.StartsWith("@bublikheadbot")) await botActions.MessageMarkedAsBoyan();
     }
 }
 

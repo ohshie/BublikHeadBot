@@ -186,7 +186,9 @@ public class BotActions
         if (regex.IsMatch(Message.Text) && Message.ReplyToMessage.MessageId != null)
         {
             var botMessage =
-                await SendBotMessage($"{Message.From.Username} think that this is a boyan. Anyone agrees?");
+                await BotClient.SendTextMessageAsync(Message.Chat.Id,$"{Message.From.Username} каже, що це боян, а боян прирівнюється до зради.\n"+
+            $"Киньте 2 плюси на це повідомлення і ми відправляємо {Message.ReplyToMessage.From.Username} в тернопіль.",
+                    replyToMessageId:Message.ReplyToMessage.MessageId);
             
             await DbOperations.CreateBoyanCheck(Message, botMessage.MessageId);
         }
@@ -208,6 +210,21 @@ public class BotActions
             ConfirmationProcessor confirmationProcessor = new(BotClient, Message);
             
             await confirmationProcessor.ProcessAgreementOnHabit(habit);
+            return;
+        }
+
+        Boyan boyan = await DbOperations.FetchCorrespondingBoyan(botMessageForAgreement);
+        if (boyan != null)
+        {
+            // if (Message.From?.Id == boyan.boyanRequester)
+            // {
+            //     await SendBotMessage("Ти не можеш підтвердити своє обвинувачення, це нахрюк");
+            //     return;
+            // }
+            ConfirmationProcessor confirmationProcessor = new(BotClient, Message);
+
+            await confirmationProcessor.ProcessAgreementOnBoyan(boyan);
+            return;
         }
     }
     

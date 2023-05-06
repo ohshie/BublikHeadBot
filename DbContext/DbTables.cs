@@ -12,7 +12,7 @@ namespace BublikHeadBot;
         public int MessagesCounter { get; set; }
         public int Points { get; set; }
 
-        public ICollection<Habit?> Habits { get; set; }
+        public ICollection<Habit?> Habits { get; set; } = null!;
     }
 
     public class Habit
@@ -22,30 +22,32 @@ namespace BublikHeadBot;
         [ForeignKey("User")]
         public long UserId { get; set; }
 
-        public string HabitName { get; set; }
+        public string? HabitName { get; set; }
         public bool CompleteConfirmationPending { get; set; }
         public bool ApprovalPending { get; set; }
         public long MessageIdForApproval { get; set; }
         public long MessageIdForConfirmation { get; set; }
         public DateTime CreatedAt { get; set; }
 
-        public BotUser User { get; set; }
-        public ICollection<Agreement> Agreements { get; set; }
+        public BotUser? User { get; set; }
+        public ICollection<Agreement> Agreements { get; set; } = null!;
     }
 
     public class Boyan
     {
         [Key]
         public int Id { get; set; }
-        [ForeignKey("User")]
+        ///[ForeignKey("User")]
         public long UserId { get; set; }
+        public string? UserName { get; set; }
         
         public bool BoyanConfirmationPending { get; set; }
+        public long boyanRequester { get; set; }
         public long MessageIdForConfirmation { get; set; }
-        public long BoyanMessageId { get; set; }
-        
-        public BotUser User { get; set; }
-        public ICollection<Agreement> Agreements { get; set; }
+        public int? BoyanMessageId { get; set; }
+
+        //public BotUser User { get; set; }
+        public ICollection<Agreement>? Agreements { get; set; }
     }
 
     public class Agreement
@@ -53,7 +55,9 @@ namespace BublikHeadBot;
         [Key]
         public int Id { get; set; }
         [ForeignKey("Habit")]
-        public int HabitId { get; set; }
+        public int? HabitId { get; set; }
+        [ForeignKey("Boyan")] 
+        public int? BoyanId { get; set; }
         
         [ForeignKey("User")]
         public long AgreedByUserId { get; set; }
