@@ -47,7 +47,14 @@ public class ConfirmationProcessor : BotActions
                         $"Вирішено, це був баян. Ну {boyan.UserName} довбоеб і отримує - рейтинг.\n"+
                         "А я все ще чекаю адекватних аргументів чому російська в Україні це добре...",
                         replyToMessageId:boyan.BoyanMessageId);
+                    break;
                 }
+                
+                await DbOperations.RemoveBoyan(boyan.UserId);
+                await BotClient.SendTextMessageAsync(chatId:Message.Chat.Id,text:$"" +
+                        $"Вирішено, це був баян. Але {boyan.UserName} не бере участі в грі, тож забрати рейтинг у нього не можна, пропоную його просто обісцяти.\n"+
+                        "А я все ще чекаю адекватних аргументів чому російська в Україні це добре...",
+                        replyToMessageId:boyan.BoyanMessageId);
                 break;
         }
     }
