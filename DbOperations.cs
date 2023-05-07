@@ -137,6 +137,25 @@ public class DbOperations
         return false;
     }
 
+    public async Task<bool> RemoveBoyan(long telegramId)
+    {
+        using (BotDbContext dbContext = new BotDbContext())
+        {
+            Boyan? boyan = await dbContext.Boyans.
+                Include(b => b.Agreements).
+                FirstOrDefaultAsync(b => b.UserId == telegramId);
+
+            if (boyan != null)
+            {
+                dbContext.Agreements.RemoveRange(boyan.Agreements!);
+                dbContext.Boyans.Remove(boyan);
+                await dbContext.SaveChangesAsync();
+                return true;
+            }
+        }
+        return false;
+    }
+
     public async Task MarkHabitAsPendingConfirmation(long telegramId, long messageId)
     {
         BotUser userInDb = await FetchUser(telegramId);
@@ -281,6 +300,16 @@ public class DbOperations
         using (BotDbContext dbContext = new BotDbContext())
         {
             user.Points += 1;
+            dbContext.Update(user);
+            await dbContext.SaveChangesAsync();
+        }
+    }
+
+    public async Task RemovePoints(BotUser user)
+    {
+        using (BotDbContext dbContext = new BotDbContext())
+        {
+            user.Points -= 1;
             dbContext.Update(user);
             await dbContext.SaveChangesAsync();
         }

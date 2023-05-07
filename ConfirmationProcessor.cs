@@ -21,16 +21,6 @@ public class ConfirmationProcessor : BotActions
         DbOperations = new DbOperations();
     }
 
-    internal async Task ProcessAgreementOnHabit(Habit habit)
-    {
-        AgreeingUser = habit.User;
-        HabitInQuestion = habit;
-        
-        if (habit.CompleteConfirmationPending) await ProcessConfirmations();
-
-        if (habit.ApprovalPending) await ProcessApprovals();
-    }
-
     internal async Task ProcessAgreementOnBoyan(Boyan boyan)
     {
         switch (boyan.Agreements.Count)
@@ -41,13 +31,35 @@ public class ConfirmationProcessor : BotActions
                                      $"Треба ще 1 і пакуємо його нахуй",
                                      replyToMessageId:boyan.BoyanMessageId);
                 return;
-            case 1:
+            
+            case <= AmountOfAgreementsNeeded:
+                
+                if (await DoubleVoteProtectionFail(boyan)) return;
+                
                 await DbOperations.AddAgreementToBoyan(boyan, Message.From.Id);
-                await BotClient.SendTextMessageAsync(chatId:Message.Chat.Id,text:$"просто можна не бути малоросом" +
-                    $"Треба ще 1 і пакуємо його нахуй",
-                    replyToMessageId:boyan.BoyanMessageId);
+                BotUser user = await DbOperations.FetchUser(boyan.UserId);
+                
+                if (user != null)
+                {
+                    await DbOperations.RemovePoints(user);
+                    await DbOperations.RemoveBoyan(user.Id);
+                    await BotClient.SendTextMessageAsync(chatId:Message.Chat.Id,text:$"" +
+                        $"Вирішено, це був баян. Ну {boyan.UserName} довбоеб і отримує - рейтинг.\n"+
+                        "А я все ще чекаю адекватних аргументів чому російська в Україні це добре...",
+                        replyToMessageId:boyan.BoyanMessageId);
+                }
                 break;
         }
+    }
+    
+    internal async Task ProcessAgreementOnHabit(Habit habit)
+    {
+        AgreeingUser = habit.User;
+        HabitInQuestion = habit;
+        
+        if (habit.CompleteConfirmationPending) await ProcessConfirmations();
+
+        if (habit.ApprovalPending) await ProcessApprovals();
     }
     
     private async Task ProcessConfirmations()
@@ -60,7 +72,7 @@ public class ConfirmationProcessor : BotActions
                     $"{AgreeingUser.Username} підтвердив, що {HabitInQuestion.User.Username} закінчив своє завдання {HabitInQuestion.HabitName}.\n" +
                     $"Треба ще 1");
                 return;
-            case 1:
+            case <= AmountOfAgreementsNeeded:
             {
                 await DbOperations.AddPoints(HabitInQuestion.User); 
                 await DbOperations.RemoveHabit(HabitInQuestion.User.Id);
@@ -84,7 +96,7 @@ public class ConfirmationProcessor : BotActions
                 return;
             }
             
-            case < AmountOfAgreementsNeeded:
+            case <= AmountOfAgreementsNeeded:
             {
                 if (await DoubleVoteProtectionFail(HabitInQuestion)) return;
 
@@ -114,6 +126,19 @@ public class ConfirmationProcessor : BotActions
     private async Task<bool> DoubleVoteProtectionFail(Habit habit)
     {
         var approval = habit.Agreements.Any(ha => ha.AgreedByUser == AgreeingUser);
+
+        if (approval)
+        {
+            await SendBotMessage("Це що за корупційна схема? Два рази підтверджувати не можна. Чекай сбу");
+            return true;
+        }
+        
+        return false;
+    }
+    
+    private async Task<bool> DoubleVoteProtectionFail(Boyan boyan)
+    {
+        var approval = boyan.Agreements.Any(ha => ha.AgreedByUser == AgreeingUser);
 
         if (approval)
         {

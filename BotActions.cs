@@ -179,14 +179,14 @@ public class BotActions
 
     public async Task MessageMarkedAsBoyan()
     {
-        string pattern = @"(боян|баян)";
+        string pattern = @"(боян|баян|boyan|bayan)";
 
         Regex regex = new Regex(pattern, RegexOptions.IgnoreCase);
 
         if (regex.IsMatch(Message.Text) && Message.ReplyToMessage.MessageId != null)
         {
             var botMessage =
-                await BotClient.SendTextMessageAsync(Message.Chat.Id,$"{Message.From.Username} каже, що це боян, а боян прирівнюється до зради.\n"+
+                await BotClient.SendTextMessageAsync(Message.Chat.Id,$"{Message.From.Username} каже, що це баян, а баян прирівнюється до зради.\n"+
             $"Киньте 2 плюси на це повідомлення і ми відправляємо {Message.ReplyToMessage.From.Username} в тернопіль.",
                     replyToMessageId:Message.ReplyToMessage.MessageId);
             
@@ -216,15 +216,14 @@ public class BotActions
         Boyan boyan = await DbOperations.FetchCorrespondingBoyan(botMessageForAgreement);
         if (boyan != null)
         {
-            // if (Message.From?.Id == boyan.boyanRequester)
-            // {
-            //     await SendBotMessage("Ти не можеш підтвердити своє обвинувачення, це нахрюк");
-            //     return;
-            // }
+            if (Message.From?.Id == boyan.boyanRequester)
+            {
+                await SendBotMessage("Ти не можеш підтвердити своє обвинувачення, це нахрюк");
+                return;
+            }
             ConfirmationProcessor confirmationProcessor = new(BotClient, Message);
 
             await confirmationProcessor.ProcessAgreementOnBoyan(boyan);
-            return;
         }
     }
     
