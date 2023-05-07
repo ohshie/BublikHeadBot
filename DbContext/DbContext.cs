@@ -13,6 +13,6 @@ public class BotDbContext : DbContext
     
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseNpgsql("Host=129.152.25.111;Database=bublikhead;Username=postgres;Password=CkVDuHj^C#7f");
+        optionsBuilder.UseNpgsql(dbConnectionstring);
     }
 }
